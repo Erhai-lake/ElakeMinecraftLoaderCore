@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
 
 namespace ElakeMinecraftLoaderCore
 {
@@ -66,7 +67,7 @@ namespace ElakeMinecraftLoaderCore
         }
 
         /// <summary>
-        /// 获取Java的位数
+        /// 获取Java信息列表
         /// </summary>
         /// <remarks>
         /// 通过输入Java路径来获取Java的位数(32位或64位)
@@ -121,9 +122,9 @@ namespace ElakeMinecraftLoaderCore
         /// 获取Java列表(版本号,位数,路径),使用where指令查找,耗时较长,只返回有效的Java
         /// </remarks>
         /// <returns>Java列表</returns>
-        public static List<JavaInfo> GetJavaList()
+        public static List<JavaInfoList> GetJavaList()
         {
-            List<JavaInfo> JavaList = new List<JavaInfo>();
+            List<JavaInfoList> JavaList = new List<JavaInfoList>();
             string[] Letters = Enumerable.Range('A', 26).Select(x => ((char)x).ToString()).ToArray();
             foreach (string Letter in Letters)
             {
@@ -155,7 +156,12 @@ namespace ElakeMinecraftLoaderCore
                                 string JavaBitness = GetJavaBitness(Line);
                                 // 添加到列表中
                                 if (JavaVersion == "未找到Java") continue;
-                                JavaList.Add(new JavaInfo { Version = JavaVersion, Bitness = JavaBitness, Path = Line });
+                                JavaList.Add(new JavaInfoList
+                                {
+                                    Version = JavaVersion,
+                                    Bitness = JavaBitness,
+                                    Path = Line
+                                });
                             }
                         }
                     }
@@ -167,12 +173,93 @@ namespace ElakeMinecraftLoaderCore
             }
             return JavaList;
         }
+
+        /// <summary>
+        /// 获取CPU信息列表
+        /// </summary>
+        /// <remarks>
+        /// 获取CPU信息列表(品牌,型号,主频)
+        /// </remarks>
+        /// <returns>CPU信息列表</returns>
+        public static string[] GetCpuInfo()
+        {
+            ManagementClass ManagementClass = new ManagementClass("Win32_Processor");
+            ManagementObjectCollection ManagementObjectCollection = ManagementClass.GetInstances();
+            List<string> CpuInfoList = new List<string>();
+            foreach (ManagementObject ManagementObject in ManagementObjectCollection)
+            {
+                string Manufacturer = ManagementObject["Manufacturer"].ToString().Trim();
+                string Name = ManagementObject["Name"].ToString().Trim();
+                // 格式化输出
+                string Info = $"{Manufacturer} {Name}";
+                // 添加到列表中
+                CpuInfoList.Add(Info);
+            }
+            return CpuInfoList.ToArray();
+        }
+
+        /// <summary>
+        /// 获取GPU信息列表
+        /// </summary>
+        /// <remarks>
+        /// 获取GPU信息列表(品牌,型号,显存大小(GB))
+        /// </remarks>
+        /// <returns>GPU信息列表</returns>
+        public static string[] GetGpuInfo()
+        {
+            ManagementObjectSearcher Searcher = new ManagementObjectSearcher("SELECT * FROM Win32_VideoController");
+            List<string> GpuInfoList = new List<string>();
+            foreach (ManagementObject ManagementObject in Searcher.Get())
+            {
+                string Name = ManagementObject["Name"].ToString().Trim();
+                string AdapterRAM = ManagementObject["AdapterRAM"].ToString().Trim();
+                // 将AdapterRAM从字节数转换为GB
+                double AdapterRAMGB = Math.Round(Convert.ToDouble(AdapterRAM) / (1024 * 1024 * 1024), 2);
+                // 格式化输出
+                string info = $"{Name} {AdapterRAMGB}GB";
+                // 添加到列表中
+                GpuInfoList.Add(info);
+            }
+            return GpuInfoList.ToArray();
+        }
+
+        /// <summary>
+        /// 获取RAM信息列表
+        /// </summary>
+        /// <remarks>
+        /// 获取RAM信息列表(品牌,型号,容量,速度)
+        /// </remarks>
+        /// <returns>RAM信息列表</returns>
+        public static string[] GetRAMInfo()
+        {
+            ManagementObjectSearcher Searcher = new ManagementObjectSearcher("SELECT * FROM Win32_PhysicalMemory");
+            List<string> RAMInfoList = new List<string>();
+            foreach (ManagementObject ManagementObject in Searcher.Get())
+            {
+                string Manufacturer = ManagementObject["Manufacturer"].ToString().Trim();
+                string Model = ManagementObject["PartNumber"].ToString().Trim();
+                string Capacity = ManagementObject["Capacity"].ToString().Trim();
+                string Speed = ManagementObject["Speed"].ToString().Trim();
+                // 将容量从字节数转换为GB
+                double CapacityGB = Math.Round(Convert.ToDouble(Capacity) / (1024 * 1024 * 1024), 2);
+                // 格式化输出
+                string info = $"{Manufacturer} {Model} {CapacityGB}GB {Speed}MHz";
+                // 添加到列表中
+                RAMInfoList.Add(info);
+            }
+            return RAMInfoList.ToArray();
+        }
     }
 
     /// <summary>
     /// Java信息类
     /// </summary>
-    public class JavaInfo
+    /// <remarks>
+    /// Version 版本号
+    /// Bitness 位长
+    /// Path 路径
+    /// </remarks>
+    public class JavaInfoList
     {
         public string Version { get; set; }
         public string Bitness { get; set; }
