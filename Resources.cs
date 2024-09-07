@@ -66,7 +66,7 @@ namespace ElakeMinecraftLoaderCore
         /// 初始化源
         /// </summary>
         /// <remarks>
-        /// 选择后续方法的源
+        /// 将版本信息写入VersionJson
         /// </remarks>
         /// <param name="Source">源(MoJang,BMCLAPI)</param>
         /// <returns>成功返回true</returns>

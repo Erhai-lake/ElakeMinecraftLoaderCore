@@ -4,13 +4,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Threading.Tasks;
 
 namespace ElakeMinecraftLoaderCore
 {
     /// <summary>
     /// 辅助工具类
     /// </summary>
-    public class AuxiliaryTools
+    public static class AuxiliaryTools
     {
         /// <summary>
         /// 获取Java的版本号
@@ -67,13 +68,13 @@ namespace ElakeMinecraftLoaderCore
         }
 
         /// <summary>
-        /// 获取Java信息列表
+        /// 获取Java位长
         /// </summary>
         /// <remarks>
-        /// 通过输入Java路径来获取Java的位数(32位或64位)
+        /// 通过输入Java路径来获取Java的位长(32位或64位)
         /// </remarks>
         /// <param name="JavaPath">Java路径</param>
-        /// <returns>位数</returns>
+        /// <returns>位长</returns>
         public static string GetJavaBitness(string JavaFolderPath)
         {
             // 构建java.exe的完整路径
@@ -122,7 +123,7 @@ namespace ElakeMinecraftLoaderCore
         /// 获取Java列表(版本号,位数,路径),使用where指令查找,耗时较长,只返回有效的Java
         /// </remarks>
         /// <returns>Java列表</returns>
-        public static List<JavaInfoList> GetJavaList()
+        public static async Task<List<JavaInfoList>> GetJavaList()
         {
             List<JavaInfoList> JavaList = new List<JavaInfoList>();
             string[] Letters = Enumerable.Range('A', 26).Select(x => ((char)x).ToString()).ToArray();
@@ -141,15 +142,15 @@ namespace ElakeMinecraftLoaderCore
                         // 启动进程
                         Process.Start();
                         // 读取标准输出,其中包含java.exe的路径
-                        string Output = Process.StandardOutput.ReadToEnd();
+                        string Output = await Process.StandardOutput.ReadToEndAsync();
                         // 关闭进程
-                        Process.WaitForExit();
+                        await Process.WaitForExitAsync();
 
                         // 按行分割输出结果
                         using (StringReader Reader = new StringReader(Output))
                         {
                             string Line;
-                            while ((Line = Reader.ReadLine()) != null)
+                            while ((Line = await Reader.ReadLineAsync()) != null)
                             {
                                 Line = Line.Replace("\\bin\\java.exe", string.Empty);
                                 string JavaVersion = GetJavaVersion(Line);
@@ -172,6 +173,28 @@ namespace ElakeMinecraftLoaderCore
                 }
             }
             return JavaList;
+        }
+
+        private static async Task WaitForExitAsync(this Process Process)
+        {
+            var Tcs = new TaskCompletionSource<object>();
+            Process.EnableRaisingEvents = true;
+            Process.Exited += (sender, args) =>
+            {
+                try
+                {
+                    Tcs.SetResult(null);
+                }
+                catch
+                {
+                    return;
+                }
+            };
+            if (Process.HasExited)
+            {
+                return;
+            }
+            await Tcs.Task;
         }
 
         /// <summary>
