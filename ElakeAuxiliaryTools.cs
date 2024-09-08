@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net.Http;
-using System.Security.Policy;
 using System.Threading.Tasks;
 
 namespace ElakeMinecraftLoaderCore
@@ -13,7 +12,7 @@ namespace ElakeMinecraftLoaderCore
     /// <summary>
     /// 辅助工具类
     /// </summary>
-    public static class AuxiliaryTools
+    public static class ElakeAuxiliaryTools
     {
         /// <summary>
         /// 获取Java的版本号
@@ -287,18 +286,17 @@ namespace ElakeMinecraftLoaderCore
         {
             using (HttpClient Client = new HttpClient())
             {
-                //try
-                //{
+                try
+                {
                     HttpResponseMessage Response = await Client.GetAsync(URL);
-                    Response.EnsureSuccessStatusCode();
                     string ResponseBody = await Response.Content.ReadAsStringAsync();
                     return ResponseBody;
                 }
-            //catch (HttpRequestException e)
-            //{
-            //    return e.Message;
-        //}
-    //}
+                catch (HttpRequestException e)
+                {
+                    return e.Message;
+                }
+            }
         }
     }
 

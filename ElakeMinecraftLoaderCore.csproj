@@ -73,9 +73,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AuxiliaryTools.cs" />
+    <Compile Include="ElakeAuxiliaryTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resources.cs" />
+    <Compile Include="ElakeResources.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

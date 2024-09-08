@@ -9,7 +9,7 @@ namespace ElakeMinecraftLoaderCore
     /// <summary>
     /// 资源类
     /// </summary>
-    public class Resources
+    public class ElakeResources
     {
         /// <summary>
         /// Minecraft版本Json数据
@@ -81,21 +81,12 @@ namespace ElakeMinecraftLoaderCore
             {
                 URL = "https://bmclapi2.bangbang93.com/mc/game/version_manifest_v2.json";
             }
-            using (HttpClient Client = new HttpClient())
+            string Response = await ElakeAuxiliaryTools.GETRequest(URL);
+            if (string.IsNullOrEmpty(Response) || Response.Contains("HttpRequestException"))
             {
-                try
-                {
-                    // 发送GET请求
-                    HttpResponseMessage Response = await Client.GetAsync(URL);
-                    Response.EnsureSuccessStatusCode();
-                    // 读取响应内容
-                    VersionJson = await Response.Content.ReadAsStringAsync();
-                }
-                catch
-                {
-                    return false;
-                }
+                return false;
             }
+            VersionJson = Response;
             return true;
         }
 
